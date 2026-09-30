@@ -466,7 +466,14 @@
                 if (tarifa) {
                     let base = Number(tarifa.precio_base) || 0;
                     let adicional = Number(tarifa.adicional) || 0;
-                    let total = (base + adicional).toFixed(2);
+                    let total;
+                    // Fórmula histórica para períodos del año 2022 hacia atrás
+                    if (fDesde && parseInt(fDesde.split('-')[0]) <= 2022) {
+                        total = 2.10; // 🔹 Precio fijo para cualquier cantidad
+                    } else {
+                        // Fórmula actual para 2023 en adelante
+                        total = (base + adicional).toFixed(2);
+                    }
                     document.getElementById('txtPrecioCalculado').value = `$ ${total}`;
                 } else {
                     document.getElementById('txtPrecioCalculado').value = "$ 0.00";
