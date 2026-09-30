@@ -178,7 +178,8 @@
                             <div class="mb-2">
                                 <label class="form-label small fw-bold text-muted mb-1">Código de Empresa:</label>
                                 <input type="text" id="txtCodigoEmpresa" class="form-control" required placeholder="Ej: 11801"
-                                       onchange="cargarBalancesPorCodigo()">
+                                       oninput="validarClienteEmpresaLive(); cargarBalancesPorCodigo();" onchange="cargarBalancesPorCodigo()">
+                                <small id="msjValidacionCliente" class="d-block mt-1"></small>
                             </div>
 
                             <!-- 1. Entrada requerida: Fecha Desde -->
@@ -188,6 +189,7 @@
                                 </label>
                                 <input type="date" id="txtFechaDesde" class="form-control" required 
                                        oninput="calcularCamposAutomaticos()" onchange="calcularCamposAutomaticos()">
+                                <small id="msjValidacionAno" class="d-block text-danger mt-1"></small>
                             </div>
 
                             <!-- 2. Entrada requerida: Monto del Balance -->
@@ -224,7 +226,7 @@
                             </div>
 
                             <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary flex-fill">Guardar Balance</button>
+                                <button type="submit" id="btnGuardarBalance" class="btn btn-primary flex-fill">Guardar Balance</button>
                                 <button type="reset" class="btn btn-warning" onclick="limpiarFormBalance()">Limpiar</button>
                             </div>
                         </form>
@@ -362,18 +364,66 @@
         }
 
         // ==========================================
-        // CÁLCULOS AUTOMÁTICOS DE BALANCE
+        // CÁLCULOS Y VALIDACIONES AUTOMÁTICAS DE BALANCE
         // ==========================================
+        async function validarClienteEmpresaLive() {
+            let cod = document.getElementById('txtCodigoEmpresa').value.trim();
+            let msj = document.getElementById('msjValidacionCliente');
+            let btn = document.getElementById('btnGuardarBalance');
+
+            if (!cod) {
+                if (msj) msj.innerHTML = '';
+                if (btn) btn.disabled = false;
+                return true;
+            }
+
+            if (listaClientesCache.length === 0) {
+                try {
+                    let res = await fetch('/clientes');
+                    let data = await res.json();
+                    listaClientesCache = Array.isArray(data) ? data : (data.array || []);
+                } catch(e) {}
+            }
+
+            let cliente = listaClientesCache.find(c => c.codigo.toString().trim() === cod);
+            if (!cliente) {
+                if (msj) {
+                    msj.className = "small d-block text-warning mt-1";
+                    msj.innerHTML = "⚠️ Código no registrado como cliente.";
+                }
+                if (btn) btn.disabled = false;
+                return true;
+            }
+
+            if (cliente.tipo.toLowerCase() !== 'empresa') {
+                if (msj) {
+                    msj.className = "small d-block text-danger fw-bold mt-1";
+                    msj.innerHTML = `❌ El cliente "${cliente.nombre}" es Particular. Solo los clientes de tipo Empresa pueden registrar balances.`;
+                }
+                if (btn) btn.disabled = true;
+                return false;
+            }
+
+            if (msj) {
+                msj.className = "small d-block text-success fw-bold mt-1";
+                msj.innerHTML = `✓ Empresa: ${cliente.nombre}`;
+            }
+            if (btn) btn.disabled = false;
+            return true;
+        }
+
         function calcularCamposAutomaticos() {
             let fDesde = document.getElementById('txtFechaDesde').value;
             let mBalance = parseFloat(document.getElementById('txtMontoBalance').value);
+            let cod = document.getElementById('txtCodigoEmpresa').value.trim();
+            let msjAno = document.getElementById('msjValidacionAno');
 
             // 1. Calcular Fecha Hasta automáticamente (+1 año)
             if (fDesde) {
                 let partes = fDesde.split('-');
                 if (partes.length === 3) {
-                    let ano = parseInt(partes[0]) + 1;
-                    let fHasta = `${ano}-${partes[1]}-${partes[2]}`;
+                    let ano = parseInt(partes[0]);
+                    let fHasta = `${ano + 1}-${partes[1]}-${partes[2]}`;
                     document.getElementById('txtFechaHasta').value = fHasta;
 
                     // 2. Calcular Estado automáticamente según la fecha actual
@@ -387,13 +437,30 @@
                     } else {
                         document.getElementById('txtEstadoCalculado').value = "Histórico";
                     }
+
+                    // 3. Validar si ya existe un balance registrado para este año en esta empresa
+                    if (cod && msjAno) {
+                        let repetido = listaBalancesMemoria.find(b => 
+                            b.codigo.toString().trim() === cod && 
+                            parseInt(b.desde.split('-')[0]) === ano &&
+                            (accionBalance === 'nuevo' || b.idBalance != idBalance)
+                        );
+                        if (repetido) {
+                            msjAno.innerHTML = `⚠️ Ya existe un balance registrado para el año ${ano} en esta empresa.`;
+                        } else {
+                            msjAno.innerHTML = '';
+                        }
+                    } else if (msjAno) {
+                        msjAno.innerHTML = '';
+                    }
                 }
             } else {
                 document.getElementById('txtFechaHasta').value = '';
                 document.getElementById('txtEstadoCalculado').value = '';
+                if (msjAno) msjAno.innerHTML = '';
             }
 
-            // 3. Calcular Precio automáticamente a partir de la tabla tarifaria
+            // 4. Calcular Precio automáticamente a partir de la tabla tarifaria
             if (!isNaN(mBalance) && mBalance > 0) {
                 let tarifa = listaTarifasMemoria.find(t => mBalance >= Number(t.desde) && mBalance <= Number(t.hasta));
                 if (tarifa) {
@@ -425,6 +492,7 @@
             if (codigo) {
                 document.getElementById('txtCodigoEmpresa').value = codigo;
                 document.getElementById('txtFiltroCodigoBalance').value = codigo;
+                validarClienteEmpresaLive();
                 obtenerBalances(codigo);
             }
         }
@@ -433,6 +501,7 @@
             let cod = document.getElementById('txtCodigoEmpresa').value.trim();
             if (cod) {
                 document.getElementById('txtFiltroCodigoBalance').value = cod;
+                validarClienteEmpresaLive();
                 obtenerBalances(cod);
             }
         }
@@ -460,12 +529,16 @@
             obtenerBalances();
         });
 
+        let listaClientesCache = [];
+
         async function obtenerClientes(buscar = "") {
             try {
                 let response = await fetch(`/clientes?buscar=${encodeURIComponent(buscar)}`);
                 if (response.ok) {
                     let datos = await response.json();
-                    mostrarDatos(datos);
+                    let lista = Array.isArray(datos) ? datos : (datos.array || []);
+                    if (!buscar) listaClientesCache = lista;
+                    mostrarDatos(lista);
                 }
             } catch (e) {
                 console.log("Servidor no disponible para clientes");
@@ -572,9 +645,7 @@
                 if (response.ok) {
                     let res = await response.json();
                     let lista = Array.isArray(res) ? res : (res.array || []);
-                    if (lista && lista.length > 0) {
-                        listaBalancesMemoria = lista;
-                    }
+                    listaBalancesMemoria = lista;
                 }
             } catch (e) {
                 console.log("Usando datos locales de balances");
@@ -616,6 +687,10 @@
                         <td class="text-center fw-bold">$${formatearDinero(b.precio)}</td>
                         <td class="text-center">${b.estado}</td>
                         <td class="text-center" onclick="event.stopPropagation();">
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 me-1"
+                                    onclick='modificarBalance(${JSON.stringify(b)}, event)'>
+                                MOD
+                            </button>
                             <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" 
                                     onclick='eliminarBalance(${JSON.stringify(b)}, event)'>
                                 DEL
@@ -641,6 +716,7 @@
             document.getElementById('txtCodigoEmpresa').value = b.codigo;
             document.getElementById('txtFechaDesde').value = b.desde;
             document.getElementById('txtMontoBalance').value = b.balance;
+            validarClienteEmpresaLive();
             calcularCamposAutomaticos();
         }
 
@@ -654,23 +730,64 @@
                         body: JSON.stringify({ accion: 'eliminar', idBalance: b.idBalance })
                     });
                     let res = await response.json();
-                    if (res.msg != "ok") alert(res.msg);
+                    if (res.msg !== "ok") {
+                        alert("Error al eliminar: " + res.msg);
+                        return;
+                    }
                 } catch (e) {
-                    // Fallback local
-                    listaBalancesMemoria = listaBalancesMemoria.filter(x => x.idBalance !== b.idBalance);
+                    alert("Error de conexión al eliminar: " + e);
+                    return;
                 }
-                obtenerBalances(document.getElementById('txtFiltroCodigoBalance').value);
+                let codFiltro = document.getElementById('txtFiltroCodigoBalance').value || document.getElementById('txtCodigoEmpresa').value;
+                await obtenerBalances(codFiltro);
                 limpiarFormBalance();
             }
         }
 
         async function guardarBalance() {
+            let cod = document.getElementById('txtCodigoEmpresa').value.trim();
+            let fDesde = document.getElementById('txtFechaDesde').value;
+            let mBalance = parseFloat(document.getElementById('txtMontoBalance').value);
+
+            if (!cod) {
+                alert("Por favor ingrese el código de la empresa.");
+                return;
+            }
+            if (!fDesde) {
+                alert("Por favor seleccione la fecha de inicio (Desde).");
+                return;
+            }
+            if (isNaN(mBalance) || mBalance <= 0) {
+                alert("Por favor ingrese un monto de balance válido mayor a 0.");
+                return;
+            }
+
+            // Validar tipo Empresa
+            let esEmpresaValida = await validarClienteEmpresaLive();
+            if (!esEmpresaValida) {
+                alert("Error: Solo los clientes de tipo Empresa pueden registrar balances.");
+                return;
+            }
+
+            // Validar que no se repita el año para la misma empresa
+            let partes = fDesde.split('-');
+            let anoNuevo = parseInt(partes[0]);
+            let balanceDuplicado = listaBalancesMemoria.find(b => 
+                b.codigo.toString().trim() === cod && 
+                parseInt(b.desde.split('-')[0]) === anoNuevo &&
+                (accionBalance === 'nuevo' || b.idBalance != idBalance)
+            );
+            if (balanceDuplicado) {
+                alert(`Error: Ya existe un balance registrado para la empresa con código '${cod}' en el año ${anoNuevo}. No se puede registrar dos veces el mismo año.`);
+                return;
+            }
+
             let precioLimpio = document.getElementById('txtPrecioCalculado').value.replace('$', '').trim();
             let datos = {
-                codigo: document.getElementById('txtCodigoEmpresa').value,
-                desde: document.getElementById('txtFechaDesde').value,
+                codigo: cod,
+                desde: fDesde,
                 hasta: document.getElementById('txtFechaHasta').value,
-                balance: parseFloat(document.getElementById('txtMontoBalance').value),
+                balance: mBalance,
                 precio: parseFloat(precioLimpio) || 0,
                 estado: document.getElementById('txtEstadoCalculado').value,
                 accion: accionBalance,
@@ -686,19 +803,14 @@
                 let res = await response.json();
                 if (res.msg != "ok") {
                     alert("Mensaje del servidor: " + res.msg);
+                    return; // No limpiar para que pueda corregir
                 }
             } catch (e) {
-                // Fallback local en memoria
-                if (accionBalance === 'nuevo') {
-                    datos.idBalance = Date.now();
-                    listaBalancesMemoria.push(datos);
-                } else {
-                    let idx = listaBalancesMemoria.findIndex(x => x.idBalance == idBalance);
-                    if (idx !== -1) listaBalancesMemoria[idx] = { ...datos, idBalance };
-                }
+                alert("Error de conexión al guardar balance: " + e);
+                return;
             }
 
-            obtenerBalances(datos.codigo);
+            await obtenerBalances(datos.codigo);
             limpiarFormBalance();
         }
 
@@ -710,6 +822,8 @@
             document.getElementById('txtFechaHasta').value = '';
             document.getElementById('txtPrecioCalculado').value = '$ 0.00';
             document.getElementById('txtEstadoCalculado').value = '';
+            let msjAno = document.getElementById('msjValidacionAno');
+            if (msjAno) msjAno.innerHTML = '';
         }
 
         // ==========================================

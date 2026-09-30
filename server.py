@@ -16,27 +16,43 @@ crudBalances = crud_balances.crud_balances()
 
 class miServidor(SimpleHTTPRequestHandler):
     def do_POST(self):
-        urlParse = urlparse(self.path)
-        longitud = int(self.headers.get('Content-Length', 0))
-        datos = self.rfile.read(longitud).decode("utf-8")
-        datos = parse.unquote(datos)
         try:
-            datos_json = json.loads(datos)
-        except Exception:
-            datos_json = {}
+            urlParse = urlparse(self.path)
+            longitud = int(self.headers.get('Content-Length', 0))
+            cuerpo = self.rfile.read(longitud).decode("utf-8")
+            
+            try:
+                datos_json = json.loads(cuerpo)
+            except Exception:
+                try:
+                    cuerpo_unquoted = parse.unquote(cuerpo)
+                    datos_json = json.loads(cuerpo_unquoted)
+                except Exception:
+                    datos_json = {}
 
-        if urlParse.path in ["/tarifa", "/tarifas"]:
-            msg = crudTarifas.administrar(datos_json)
-        elif urlParse.path in ["/balance", "/balances"]:
-            msg = crudBalances.administrar(datos_json)
-        else:
-            msg = crudClientes.administrar(datos_json)
+            if urlParse.path in ["/tarifa", "/tarifas"]:
+                msg = crudTarifas.administrar(datos_json)
+            elif urlParse.path in ["/balance", "/balances"]:
+                msg = crudBalances.administrar(datos_json)
+            else:
+                msg = crudClientes.administrar(datos_json)
 
-        respuesta = {'msg': msg}
-        self.send_response(200)
-        self.send_header("Content-type", "application/json; charset=utf-8")
-        self.end_headers()
-        self.wfile.write(json.dumps(respuesta, default=str).encode("utf-8"))
+            respuesta = {'msg': msg}
+            resp_bytes = json.dumps(respuesta, default=str).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
+            self.end_headers()
+            self.wfile.write(resp_bytes)
+        except Exception as e:
+            print(f"Error en do_POST: {e}")
+            respuesta = {'msg': f"Error en servidor: {e}"}
+            resp_bytes = json.dumps(respuesta).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
+            self.end_headers()
+            self.wfile.write(resp_bytes)
 
     def do_GET(self):
         urlParse = urlparse(self.path)
@@ -45,39 +61,47 @@ class miServidor(SimpleHTTPRequestHandler):
         if urlParse.path == "/clientes":
             datos = crudClientes.consultar(qs.get("buscar", [""])[0])
             respuesta = {"array": datos if datos is not None else []}
+            resp_bytes = json.dumps(respuesta, default=str).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
             self.end_headers()
-            self.wfile.write(json.dumps(respuesta, default=str).encode("utf-8"))
+            self.wfile.write(resp_bytes)
             return
 
         if urlParse.path == "/tarifas":
             datos = crudTarifas.consultar(qs.get("buscar", [""])[0])
             respuesta = {"array": datos if datos is not None else []}
+            resp_bytes = json.dumps(respuesta, default=str).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
             self.end_headers()
-            self.wfile.write(json.dumps(respuesta, default=str).encode("utf-8"))
+            self.wfile.write(resp_bytes)
             return
 
         if urlParse.path == "/balances":
             codigo = qs.get("codigo", [""])[0]
             datos = crudBalances.consultar(codigo)
             respuesta = {"array": datos if datos is not None else []}
+            resp_bytes = json.dumps(respuesta, default=str).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
             self.end_headers()
-            self.wfile.write(json.dumps(respuesta, default=str).encode("utf-8"))
+            self.wfile.write(resp_bytes)
             return
 
         if urlParse.path == "/calcular_tarifa":
             balance_val = qs.get("balance", ["0"])[0]
             precio = crudBalances.calcular_precio(balance_val)
             respuesta = {"precio": precio}
+            resp_bytes = json.dumps(respuesta, default=str).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(resp_bytes)))
             self.end_headers()
-            self.wfile.write(json.dumps(respuesta, default=str).encode("utf-8"))
+            self.wfile.write(resp_bytes)
             return
 
         if self.path == "/":

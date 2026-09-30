@@ -27,18 +27,23 @@ class Conexion:
 
     def consultar(self, sql):
         try:
+            self.conexion.ping(reconnect=True, attempts=3, delay=1)
             cursor = self.conexion.cursor(dictionary=True)
             cursor.execute(sql)
-            return cursor.fetchall()
+            resultado = cursor.fetchall()
+            cursor.close()
+            return resultado
         except Error as e:
             print(f"Error al consultar la base de datos: {e}")
             return None
 
     def ejecutar(self, sql, datos):
         try:
+            self.conexion.ping(reconnect=True, attempts=3, delay=1)
             cursor = self.conexion.cursor()
             cursor.execute(sql, datos)
             self.conexion.commit()
+            cursor.close()
             return 'ok'
         except Error as e:
             print(f"Error al ejecutar la consulta: {e}")
