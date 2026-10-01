@@ -61,13 +61,16 @@
             <!-- Pestañas para cambiar de sección -->
             <ul class="nav nav-tabs border-0" id="moduloTabs" role="tablist">
                 <li class="nav-item">
-                    <button class="nav-link active" id="tab-clientes" onclick="cambiarPestana('clientes')">Clientes</button>
+                    <button class="nav-link active" id="tab-clientes"
+                        onclick="cambiarPestana('clientes')">Clientes</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="tab-balances" onclick="cambiarPestana('balances')">Cálculo de Balances</button>
+                    <button class="nav-link" id="tab-balances" onclick="cambiarPestana('balances')">Cálculo de
+                        Balances</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" id="tab-tarifas" onclick="cambiarPestana('tarifas')">Tabla Tarifaria</button>
+                    <button class="nav-link" id="tab-tarifas" onclick="cambiarPestana('tarifas')">Tabla
+                        Tarifaria</button>
                 </li>
             </ul>
         </div>
@@ -97,15 +100,16 @@
                                     class="form-control" type="text">
                             </div>
                             <div class="mb-2">
-                                <input pattern="^[0-9]{4}-[0-9]{4}$" placeholder="Telefono (ej: 4545-3256)" name="txtTelefonoCliente"
-                                    id="txtTelefonoCliente" class="form-control" type="text">
+                                <input pattern="^[0-9]{4}-[0-9]{4}$" placeholder="Telefono (ej: 4545-3256)"
+                                    name="txtTelefonoCliente" id="txtTelefonoCliente" class="form-control" type="text">
                             </div>
                             <div class="mb-2">
                                 <input placeholder="Email" name="txtEmailCliente" id="txtEmailCliente"
                                     class="form-control" type="email">
                             </div>
                             <div class="mb-2">
-                                <select class="form-control" name="cboTipoPersona" id="cboTipoPersona" onchange="comprobarTipoCliente()">
+                                <select class="form-control" name="cboTipoPersona" id="cboTipoPersona"
+                                    onchange="comprobarTipoCliente()">
                                     <option value="particular">Particular</option>
                                     <option value="empresa">Empresa</option>
                                 </select>
@@ -114,14 +118,16 @@
                             <!-- Botón directo si es Empresa -->
                             <div id="btnIrABalances" class="alert alert-info py-2 small d-none">
                                 🏢 Cliente tipo <strong>Empresa</strong>:
-                                <button type="button" class="btn btn-sm btn-primary ms-2" onclick="abrirBalancesDeCliente()">
+                                <button type="button" class="btn btn-sm btn-primary ms-2"
+                                    onclick="abrirBalancesDeCliente()">
                                     Calcular Balances
                                 </button>
                             </div>
 
                             <div class="d-flex gap-2 mt-3">
                                 <input type="submit" value="Guardar" class="btn btn-primary">
-                                <input type="button" value="Buscar" class="btn btn-secondary" onclick="obtenerClientes(txtBuscarCliente.value)">
+                                <input type="button" value="Buscar" class="btn btn-secondary"
+                                    onclick="obtenerClientes(txtBuscarCliente.value)">
                                 <input type="reset" value="Limpiar" class="btn btn-warning">
                             </div>
                         </form>
@@ -139,8 +145,7 @@
                                         <tr>
                                             <th colspan="7">
                                                 <input type="search" placeholder="buscar por codigo, nombre"
-                                                    id="txtBuscarCliente" name="txtBuscarCliente"
-                                                    class="form-control">
+                                                    id="txtBuscarCliente" name="txtBuscarCliente" class="form-control">
                                             </th>
                                         </tr>
                                         <tr>
@@ -177,8 +182,9 @@
                             <!-- Código de la empresa -->
                             <div class="mb-2">
                                 <label class="form-label small fw-bold text-muted mb-1">Código de Empresa:</label>
-                                <input type="text" id="txtCodigoEmpresa" class="form-control" required placeholder="Ej: 11801"
-                                       oninput="validarClienteEmpresaLive(); cargarBalancesPorCodigo();" onchange="cargarBalancesPorCodigo()">
+                                <input type="text" id="txtCodigoEmpresa" class="form-control" required placeholder="Ej: 11801
+                                " autocomplete="off" oninput="validarClienteEmpresarial();"
+                                    onchange="cargarBalancesPorCodigo()">
                                 <small id="msjValidacionCliente" class="d-block mt-1"></small>
                             </div>
 
@@ -187,8 +193,8 @@
                                 <label class="form-label small fw-bold text-primary mb-1">
                                     1. Fecha (Desde): *
                                 </label>
-                                <input type="date" id="txtFechaDesde" class="form-control" required 
-                                       oninput="calcularCamposAutomaticos()" onchange="calcularCamposAutomaticos()">
+                                <input type="date" id="txtFechaDesde" class="form-control" required
+                                    oninput="calcularCamposAutomaticos()" onchange="calcularCamposAutomaticos()">
                                 <small id="msjValidacionAno" class="d-block text-danger mt-1"></small>
                             </div>
 
@@ -197,9 +203,9 @@
                                 <label class="form-label small fw-bold text-primary mb-1">
                                     2. Monto del Balance ($): *
                                 </label>
-                                <input type="number" step="0.01" min="0.01" id="txtMontoBalance" 
-                                       class="form-control" required placeholder="Ej: 550.00"
-                                       oninput="calcularCamposAutomaticos()" onkeyup="calcularCamposAutomaticos()">
+                                <input type="number" step="0.01" min="0.01" id="txtMontoBalance" class="form-control"
+                                    required placeholder="Ej: 550.00" oninput="calcularCamposAutomaticos()"
+                                    onkeyup="calcularCamposAutomaticos()">
                             </div>
 
                             <hr class="my-2 text-muted">
@@ -216,18 +222,22 @@
                             <!-- Automático: Precio calculado según tabla tarifaria -->
                             <div class="mb-2">
                                 <label class="form-label small text-muted mb-1">Precio calculado ($):</label>
-                                <input type="text" id="txtPrecioCalculado" class="form-control bg-light fw-bold text-primary" readonly placeholder="$ 0.00">
+                                <input type="text" id="txtPrecioCalculado"
+                                    class="form-control bg-light fw-bold text-primary" readonly placeholder="$ 0.00">
                             </div>
 
                             <!-- Automático: Estado según fecha -->
                             <div class="mb-3">
                                 <label class="form-label small text-muted mb-1">Estado (según fecha):</label>
-                                <input type="text" id="txtEstadoCalculado" class="form-control bg-light fw-bold" readonly placeholder="Histórico / Vigente">
+                                <input type="text" id="txtEstadoCalculado" class="form-control bg-light fw-bold"
+                                    readonly placeholder="Histórico / Vigente">
                             </div>
 
                             <div class="d-flex gap-2">
-                                <button type="submit" id="btnGuardarBalance" class="btn btn-primary flex-fill">Guardar Balance</button>
-                                <button type="reset" class="btn btn-warning" onclick="limpiarFormBalance()">Limpiar</button>
+                                <button type="submit" id="btnGuardarBalance" class="btn btn-primary flex-fill">Guardar
+                                    Balance</button>
+                                <button type="reset" class="btn btn-warning"
+                                    onclick="limpiarFormBalance()">Limpiar</button>
                             </div>
                         </form>
                     </div>
@@ -239,13 +249,16 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold mb-0">Períodos Históricos de Balances</h6>
                             <div class="d-flex gap-2 align-items-center">
-                                <input type="text" id="txtFiltroCodigoBalance" class="form-control form-control-sm" 
-                                       placeholder="Filtrar por código..." onkeyup="obtenerBalances(this.value)" style="width: 170px;">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="obtenerBalances()">Ver todos</button>
+                                <input type="text" id="txtFiltroCodigoBalance" class="form-control form-control-sm"
+                                    placeholder="Filtrar por código..." onkeyup="obtenerBalances(this.value)"
+                                    style="width: 170px;">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="obtenerBalances()">Ver
+                                    todos</button>
                             </div>
                         </div>
                         <p class="text-muted small mb-2">
-                            Declaraciones anuales consecutivas registradas. Los períodos anteriores se conservan en el historial.
+                            Declaraciones anuales consecutivas registradas. Los períodos anteriores se conservan en el
+                            historial.
                         </p>
 
                         <!-- Boceto de la tabla como en el ejemplo -->
@@ -268,12 +281,8 @@
                             </table>
                         </div>
 
-                        <!-- Resumen administrativo como en el documento -->
-                        <div class="alert alert-light border mt-3 p-2 small mb-0">
-                            <strong>La suma visual de los precios de esos períodos es <span id="lblSumaVisual" class="text-primary fw-bold">$0.00</span>.</strong> 
-                            Este valor es solamente un total administrativo de filas históricas; no representa la mensualidad vigente ni debe cobrarse cada mes.
-                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
@@ -288,7 +297,9 @@
                     <button class="btn btn-sm btn-outline-secondary" onclick="obtenerTarifas()">Actualizar</button>
                 </div>
                 <p class="text-muted small mb-3">
-                    La siguiente tabla reproduce los rangos visibles en las capturas suministradas. Los importes se expresan en dólares. Cada tarifa deberá estar asociada expresamente al producto correspondiente y a una fecha de vigencia.
+                    La siguiente tabla reproduce los rangos visibles en las capturas suministradas. Los importes se
+                    expresan en dólares. Cada tarifa deberá estar asociada expresamente al producto correspondiente y a
+                    una fecha de vigencia.
                 </p>
                 <div class="table-responsive">
                     <table class="tabla-boceto">
@@ -382,7 +393,7 @@
                     let res = await fetch('/clientes');
                     let data = await res.json();
                     listaClientesCache = Array.isArray(data) ? data : (data.array || []);
-                } catch(e) {}
+                } catch (e) { }
             }
 
             let cliente = listaClientesCache.find(c => c.codigo.toString().trim() === cod);
@@ -428,7 +439,7 @@
 
                     // 2. Calcular Estado automáticamente según la fecha actual
                     let hoy = new Date();
-                    hoy.setHours(0,0,0,0);
+                    hoy.setHours(0, 0, 0, 0);
                     let d = new Date(fDesde + "T00:00:00");
                     let h = new Date(fHasta + "T00:00:00");
 
@@ -440,8 +451,8 @@
 
                     // 3. Validar si ya existe un balance registrado para este año en esta empresa
                     if (cod && msjAno) {
-                        let repetido = listaBalancesMemoria.find(b => 
-                            b.codigo.toString().trim() === cod && 
+                        let repetido = listaBalancesMemoria.find(b =>
+                            b.codigo.toString().trim() === cod &&
                             parseInt(b.desde.split('-')[0]) === ano &&
                             (accionBalance === 'nuevo' || b.idBalance != idBalance)
                         );
@@ -779,8 +790,8 @@
             // Validar que no se repita el año para la misma empresa
             let partes = fDesde.split('-');
             let anoNuevo = parseInt(partes[0]);
-            let balanceDuplicado = listaBalancesMemoria.find(b => 
-                b.codigo.toString().trim() === cod && 
+            let balanceDuplicado = listaBalancesMemoria.find(b =>
+                b.codigo.toString().trim() === cod &&
                 parseInt(b.desde.split('-')[0]) === anoNuevo &&
                 (accionBalance === 'nuevo' || b.idBalance != idBalance)
             );

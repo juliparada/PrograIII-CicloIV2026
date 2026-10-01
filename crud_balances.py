@@ -126,6 +126,25 @@ class crud_balances:
             if str(cliente['tipo']).strip().lower() != 'empresa':
                 return f"Error: El cliente '{cliente['nombre']}' es de tipo '{cliente['tipo']}'. Solo los clientes de tipo Empresa pueden registrar balances."
 
+            # Después de validar el cliente
+            id_cliente = cliente['idCliente']  # lo obtienes de la consulta
+
+            if accion == 'nuevo':
+                sql = """
+                    INSERT INTO balances(idCliente, codigo, desde, hasta, balance, precio, estado)
+                    VALUES(%s, %s, %s, %s, %s, %s, %s)
+                """
+                valores = (id_cliente, codigo, datos['desde'], datos['hasta'], datos['balance'], precio, estado)
+
+            elif accion == 'modificar':
+                sql = """
+                    UPDATE balances 
+                    SET idCliente=%s, codigo=%s, desde=%s, hasta=%s, balance=%s, precio=%s, estado=%s
+                    WHERE idBalance=%s
+                """
+                valores = (id_cliente, codigo, datos['desde'], datos['hasta'], datos['balance'], precio, estado, datos['idBalance'])
+
+
             # 3. VALIDACIÓN: NO REPETIR EL BALANCE DEL MISMO AÑO PARA EL MISMO CLIENTE
             f_desde_str = str(datos.get('desde', ''))[:10]
             if not f_desde_str:
@@ -194,3 +213,5 @@ class crud_balances:
             return self.db.ejecutar(sql, valores)
         except Exception as e:
             return f"Error al administrar balance: {e}"
+
+    
