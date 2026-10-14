@@ -26,11 +26,11 @@ class Conexion:
         except Error as e:
             print(f"Error al conectar a la base de datos: {e}")
 
-    def consultar(self, sql):
+    def consultar(self, sql, datos=()):
         try:
 
             cursor = self.conexion.cursor(dictionary=True)
-            cursor.execute(sql)
+            cursor.execute(sql, datos)
             return cursor.fetchall()
         except Error as e:
             print(f"Error al consultar la base de datos: {e}")

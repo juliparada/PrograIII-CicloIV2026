@@ -41,6 +41,20 @@ INSERT INTO `clientes` (`idCliente`, `codigo`, `nombre`, `direccion`, `telefono`
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `productos`
+--
+
+CREATE TABLE `productos` (
+  `idProducto` int(10) NOT NULL AUTO_INCREMENT,
+  `codigo` char(10) NOT NULL,
+  `descripcion` varchar(150) NOT NULL,
+  `estado` varchar(20) NOT NULL DEFAULT 'activo',
+  PRIMARY KEY (`idProducto`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tabla_tarifaria`
 --
 
