@@ -1,6 +1,6 @@
 from mysql.connector.errors import Error
-# pyrefly: ignore [missing-import]
 import conexion
+
 db = conexion.Conexion()
 
 class crud_clientes:

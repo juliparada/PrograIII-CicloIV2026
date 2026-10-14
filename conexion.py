@@ -5,9 +5,10 @@ class Conexion:
     def __init__(self):
         self.host = "localhost"
         self.user = "root"
-        self.password = ""
+        self.password = ""   
         self.database = "db_sistema_impuestos"
-        self.port = 3307
+        self.port = 3307     
+
         print("Conectando a la base de datos...")
 
         try:
@@ -27,25 +28,24 @@ class Conexion:
 
     def consultar(self, sql):
         try:
-            self.conexion.ping(reconnect=True, attempts=3, delay=1)
+
             cursor = self.conexion.cursor(dictionary=True)
             cursor.execute(sql)
-            resultado = cursor.fetchall()
-            cursor.close()
-            return resultado
+            return cursor.fetchall()
         except Error as e:
             print(f"Error al consultar la base de datos: {e}")
             return None
 
     def ejecutar(self, sql, datos):
         try:
-            self.conexion.ping(reconnect=True, attempts=3, delay=1)
+
             cursor = self.conexion.cursor()
             cursor.execute(sql, datos)
             self.conexion.commit()
-            cursor.close()
+
             return 'ok'
+        
         except Error as e:
             print(f"Error al ejecutar la consulta: {e}")
             return f'Error: {e}'
-
+        
