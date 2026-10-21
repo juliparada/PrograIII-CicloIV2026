@@ -1,0 +1,126 @@
+<form id="frmUsuario">
+    <div class="card bg-white mb-3 shadow border" style="min-width: 600px; border-radius: 10px; overflow: hidden;">
+        <div class="card-header bg-primary text-white py-2">
+            <div class="d-flex align-items-center">
+                <span class="fw-bold">::.. Administración de Usuarios (USSS025125) ..::</span>
+                <div class="ms-auto">
+                    <button data-form="usuarios" type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body bg-white p-4">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label text-dark fw-semibold small mb-1">Usuario (máx 35 caracteres)</label>
+                    <input maxlength="35" required placeholder="Nombre de usuario" name="txtUsuario"
+                        id="txtUsuario" class="form-control" type="text">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label text-dark fw-semibold small mb-1">Clave (máx 35 caracteres)</label>
+                    <input maxlength="35" required placeholder="Contraseña" name="txtClave"
+                        id="txtClave" class="form-control" type="password">
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-dark fw-semibold small mb-1">Nombre Completo (máx 85 caracteres)</label>
+                    <input maxlength="85" required placeholder="Nombre completo del usuario"
+                        name="txtNombre" id="txtNombre" class="form-control" type="text">
+                </div>
+                <div class="col-12">
+                    <label class="form-label text-dark fw-semibold small mb-1">Dirección (máx 100 caracteres)</label>
+                    <input maxlength="100" placeholder="Dirección de residencia" name="txtDireccion" id="txtDireccion"
+                        class="form-control" type="text">
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label text-dark fw-semibold small mb-1">Teléfono (máx 9 caracteres)</label>
+                    <input maxlength="9" placeholder="Ej: 7890-1234" name="txtTelefono"
+                        id="txtTelefono" class="form-control" type="text">
+                </div>
+            </div>
+        </div>
+        <div class="card-footer bg-light border-top text-center py-3">
+            <input type="submit" value="Guardar" class="btn btn-primary px-4 shadow-sm" id="btnGuardarUsuario">
+            <input type="button" value="Buscar" class="btn btn-secondary px-4 shadow-sm" id="btnBuscarUsuario">
+            <input type="reset" value="Limpiar" class="btn btn-outline-secondary px-4 shadow-sm" id="btnLimpiarUsuario">
+        </div>
+    </div>
+</form>
+
+<script>
+    var accion = 'nuevo',
+        idUsuario = '';
+
+    frmUsuario.addEventListener('submit', (e) => {
+        e.preventDefault();
+        guardarUsuario();
+    });
+
+    frmUsuario.addEventListener('reset', (e) => {
+        e.preventDefault();
+        limpiarFormulario();
+    });
+
+    function modificarUsuario(data, event) {
+        if(event) event.preventDefault();
+        idUsuario = data.idUsuario;
+        accion = "modificar";
+
+        txtUsuario.value = data.usuario;
+        txtClave.value = data.clave;
+        txtNombre.value = data.nombre;
+        txtDireccion.value = data.direccion || '';
+        txtTelefono.value = data.telefono || '';
+        
+        cargarForm('usuarios');
+    }
+
+    async function guardarUsuario() {
+        let datos = {
+            usuario: txtUsuario.value.trim(),
+            clave: txtClave.value.trim(),
+            nombre: txtNombre.value.trim(),
+            direccion: txtDireccion.value.trim(),
+            telefono: txtTelefono.value.trim(),
+            accion,
+            idUsuario
+        };
+
+        try {
+            let response = await fetch('/usuario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(datos)
+            });
+            let respuesta = await response.json();
+
+            if (respuesta.msg === "ok") {
+                alertify.success(accion === 'nuevo' ? "Usuario registrado con éxito" : "Usuario actualizado con éxito");
+                limpiarFormulario();
+                if (typeof obtenerUsuarios === 'function') {
+                    obtenerUsuarios();
+                }
+            } else {
+                alertify.error("Error: " + respuesta.msg);
+            }
+        } catch (err) {
+            console.error("Error al guardar usuario:", err);
+            alertify.error("Error de comunicación con el servidor");
+        }
+    }
+
+    function limpiarFormulario() {
+        accion = 'nuevo';
+        idUsuario = '';
+        txtUsuario.value = '';
+        txtClave.value = '';
+        txtNombre.value = '';
+        txtDireccion.value = '';
+        txtTelefono.value = '';
+    }
+
+    btnBuscarUsuario.addEventListener('click', (e) => {
+        e.preventDefault();
+        cargarForm('busqueda_usuarios');
+    });
+</script>

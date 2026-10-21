@@ -1,0 +1,130 @@
+<form id="frmConsultarUsuario">
+    <div class="card bg-white mb-3 shadow border" style="min-width: 780px; border-radius: 10px; overflow: hidden;">
+        <div class="card-header bg-primary text-white py-2">
+            <div class="d-flex align-items-center">
+                <span class="fw-bold">::.. Búsqueda de Usuarios ..::</span>
+                <div class="ms-auto">
+                    <button data-form="busqueda_usuarios" type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body bg-white p-3">
+            <div class="row mb-3">
+                <div class="col">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-secondary border">🔍</span>
+                        <input type="search" placeholder="Buscar por usuario, nombre, dirección o teléfono..."
+                            id="txtBuscarUsuario" name="txtBuscarUsuario" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="table-responsive border rounded" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover table-striped align-middle mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th class="text-secondary fw-semibold">ID</th>
+                                    <th class="text-secondary fw-semibold">Usuario</th>
+                                    <th class="text-secondary fw-semibold">Nombre</th>
+                                    <th class="text-secondary fw-semibold">Dirección</th>
+                                    <th class="text-secondary fw-semibold">Teléfono</th>
+                                    <th class="text-center text-secondary fw-semibold">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblUsuarios"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    txtBuscarUsuario.addEventListener('keyup', (e) => {
+        e.preventDefault();
+        obtenerUsuarios(txtBuscarUsuario.value);
+    });
+
+    async function obtenerUsuarios(buscar = "") {
+        try {
+            let response = await fetch(`/usuarios?buscar=${encodeURIComponent(buscar)}`),
+                datos = await response.json();
+            mostrarUsuarios(datos);
+        } catch (err) {
+            console.error("Error al obtener usuarios:", err);
+        }
+    }
+
+    function mostrarUsuarios(datos) {
+        let filas = "";
+        if (!datos || datos.length === 0) {
+            filas = `<tr><td colspan="6" class="text-center text-muted py-4">No se encontraron usuarios registrados</td></tr>`;
+        } else {
+            datos.forEach(e => {
+                filas += `
+                    <tr style="cursor: pointer;">
+                        <td onClick='cargarUsuarioParaModificar(${JSON.stringify(e)}, event)'>${e.idUsuario}</td>
+                        <td onClick='cargarUsuarioParaModificar(${JSON.stringify(e)}, event)' class="fw-bold text-primary">${e.usuario}</td>
+                        <td onClick='cargarUsuarioParaModificar(${JSON.stringify(e)}, event)'>${e.nombre}</td>
+                        <td onClick='cargarUsuarioParaModificar(${JSON.stringify(e)}, event)'>${e.direccion || ''}</td>
+                        <td onClick='cargarUsuarioParaModificar(${JSON.stringify(e)}, event)'>${e.telefono || ''}</td>
+                        <td class="text-center">
+                            <button type="button" onClick='cargarUsuarioParaModificar(${JSON.stringify(e)}, event)' 
+                                class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                Editar
+                            </button>
+                            <button type="button" onClick='eliminarUsuario(${JSON.stringify(e)}, event)' 
+                                class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                DEL
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+        tblUsuarios.innerHTML = filas;
+    }
+
+    function cargarUsuarioParaModificar(data, event) {
+        event.stopPropagation();
+        cargarForm('usuarios', () => {
+            modificarUsuario(data, event);
+        });
+    }
+
+    async function eliminarUsuario(data, event) {
+        event.stopPropagation();
+        alertify.confirm(
+            "Confirmación de eliminación",
+            `¿Está seguro que desea eliminar al usuario: <b>${data.usuario}</b> (${data.nombre})?`,
+            async function() {
+                try {
+                    let response = await fetch('/usuario', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            accion: 'eliminar',
+                            idUsuario: data.idUsuario
+                        })
+                    });
+                    let res = await response.json();
+                    if (res.msg === "ok") {
+                        alertify.success("Usuario eliminado correctamente");
+                        obtenerUsuarios(txtBuscarUsuario.value);
+                    } else {
+                        alertify.error("Error al eliminar: " + res.msg);
+                    }
+                } catch(e) {
+                    alertify.error("Error de comunicación: " + e);
+                }
+            },
+            function() {
+                alertify.message("Operación cancelada");
+            }
+        );
+    }
+
+    obtenerUsuarios();
+</script>

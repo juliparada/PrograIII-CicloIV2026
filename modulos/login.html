@@ -1,0 +1,70 @@
+<form id="frmLogin">
+    <div class="card bg-white mb-3 shadow border" style="width: 420px; margin: 40px auto; border-radius: 12px; overflow: hidden;">
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h5 class="card-title mb-1 fw-bold">::.. Inicio de Sesión ..::</h5>
+            <small class="text-white-50">Sistema Académico USSS025125</small>
+        </div>
+        <div class="card-body p-4 bg-white">
+            <div class="mb-3">
+                <label for="txtLoginUsuario" class="form-label text-dark fw-semibold small">Usuario</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-secondary border">👤</span>
+                    <input type="text" class="form-control" id="txtLoginUsuario" name="txtLoginUsuario" 
+                        placeholder="Ingrese su usuario" required autofocus>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="txtLoginClave" class="form-label text-dark fw-semibold small">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-secondary border">🔒</span>
+                    <input type="password" class="form-control" id="txtLoginClave" name="txtLoginClave" 
+                        placeholder="Ingrese su contraseña" required>
+                </div>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg shadow-sm" id="btnIniciarSesion">Ingresar al Sistema</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    frmLogin.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let usuario = txtLoginUsuario.value.trim();
+        let clave = txtLoginClave.value.trim();
+
+        if (!usuario || !clave) {
+            alertify.warning("Por favor complete todos los campos");
+            return;
+        }
+
+        try {
+            let response = await fetch('/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario, clave })
+            });
+            let res = await response.json();
+
+            if (res.status === 'ok') {
+                alertify.success(`Bienvenido al sistema: ${res.usuario.nombre}`);
+                // Ocultar formulario de login
+                $('#login').hide();
+                // Mostrar barra de menú y habilitar acceso
+                $('#navBarSistema').fadeIn();
+                $('#btnCerrarSesion').removeClass('d-none');
+                $('#usuarioSesion').text(res.usuario.nombre);
+                // Abrir directamente el formulario de usuarios
+                cargarForm('usuarios');
+            } else {
+                alertify.error(res.msg || "Acceso denegado: Credenciales incorrectas");
+                txtLoginClave.value = '';
+                txtLoginClave.focus();
+            }
+        } catch (err) {
+            console.error("Error al autenticar:", err);
+            alertify.error("Error al conectar con el servidor de autenticación");
+        }
+    });
+</script>
